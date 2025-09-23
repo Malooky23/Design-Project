@@ -27,7 +27,7 @@ import colorsys  # Import colorsys for color manipulation
 # Load the processed name data from CSV files
 # names_df: Contains name, gender, country, count, latitude, and longitude data
 # The other return values (meanings_df, last_names_df) are not used in this page
-names_df, _, _ = load_data()
+names_df, _ = load_data()
 
 # Load GeoJSON data for country boundaries to enable choropleth mapping
 geojson = get_geojson()

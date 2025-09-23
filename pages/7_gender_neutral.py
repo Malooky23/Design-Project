@@ -5,7 +5,7 @@ import streamlit as st
 
 
 # Load Data
-names_df, _, _ = load_data()
+names_df, _= load_data()
 
 st.set_page_config(page_title="Gender-Neutral Finder",
                    page_icon="🚻", layout="wide")
@@ -24,7 +24,7 @@ if combined_neutral_names:
     neutral_df = names_df[names_df["name"].isin(combined_neutral_names)]
 
     gender_distribution = (
-        neutral_df.groupby(["name", "gender"])["count"].sum().reset_index()
+        neutral_df.groupby(["name", "gender"], observed=True)["count"].sum().reset_index()
     )
 
     fig_gender_neutral = px.bar(

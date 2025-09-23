@@ -1,5 +1,13 @@
 import streamlit as st
 
+from sidebar import create_sidebar
+
+with st.sidebar:
+    add_radio = st.radio(
+        "Choose a shipping method",
+        ("Standard (5-15 days)", "Express (2-5 days)")
+    )
+
 st.set_page_config(
     page_title="Global Name Explorer - Home",
     page_icon="🌍",
@@ -18,7 +26,7 @@ Discover popularity hotspots, uncover meanings, and find unique names using the 
 **Select a feature from the sidebar on the left to get started!**
 """
 )
-
+create_sidebar()
 st.header("Explore Our Features")
 
 col1, col2, col3 = st.columns(3)

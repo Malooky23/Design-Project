@@ -3,7 +3,7 @@ import streamlit as st
 
 
 # Load Data
-names_df, _, _ = load_data()
+names_df, _,= load_data()
 
 st.set_page_config(page_title="Cross-Cultural Names",
                    page_icon="🌐", layout="wide")

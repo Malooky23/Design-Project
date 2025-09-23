@@ -4,7 +4,7 @@ import streamlit as st
 
 
 # Load Data
-names_df, _, last_names_df = load_data()
+names_df, last_names_df = load_data()
 
 st.set_page_config(page_title="Local Naming Trends",
                    page_icon="📈", layout="wide")
