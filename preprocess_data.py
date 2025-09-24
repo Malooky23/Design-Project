@@ -1,7 +1,7 @@
 # preprocess_data.py
 import pandas as pd
 import os
-from pages.country_mappings import SWEDISH_TO_ENGLISH_COUNTRIES, COUNTRY_COORDS
+from country_mappings import SWEDISH_TO_ENGLISH_COUNTRIES, COUNTRY_COORDS
 
 
 def process_raw_file(file_path, name_col, gender=None):
