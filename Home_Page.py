@@ -151,8 +151,8 @@ with col1:
 <div style='margin-top: 0.7rem;'></div>
 """, unsafe_allow_html=True)
     if st.button("Go to Geographical Explorer", key="geo", use_container_width=True):
-        st.switch_page("pages/geo.py")
-        # st.switch_page("pages/Geographical_Explorer.py")
+        # st.switch_page("pages/geo.py")
+        st.switch_page("pages/Geographical_Explorer.py")
     st.markdown("""</div>""", unsafe_allow_html=True)
 
 
