@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.sidebar.success("Select a feature from the list to begin.")
+# st.sidebar.success("Select a feature from the list to begin.")
 
 st.title("Welcome to the Global Name Explorer!")
 st.markdown(
@@ -129,7 +129,7 @@ st.markdown("""
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
-create_sidebar()
+
 st.markdown("<h2 style='font-size:1.1rem; margin-top:0.1rem; margin-bottom:0.5rem;'>Explore Our Features</h2>", unsafe_allow_html=True)
 
 col1, col2 = st.columns(2,)
@@ -152,6 +152,7 @@ with col1:
 """, unsafe_allow_html=True)
     if st.button("Go to Geographical Explorer", key="geo", use_container_width=True):
         st.switch_page("pages/geo.py")
+        # st.switch_page("pages/Geographical_Explorer.py")
     st.markdown("""</div>""", unsafe_allow_html=True)
 
 
@@ -173,7 +174,7 @@ with col2:
     <div style='margin-top: calc(2.65rem); width:100%;'>
 """, unsafe_allow_html=True)
     if st.button("Go to Name Meaning", key="meaning", use_container_width=True):
-        st.switch_page("pages/generators.py")
+        st.switch_page("pages/Generators.py")
     st.markdown("""
   </div>
 </div>

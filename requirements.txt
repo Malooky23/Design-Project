@@ -2,3 +2,4 @@ streamlit-plotly-events
 plotly
 pandas
 google-genai
+pycountry
