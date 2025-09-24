@@ -1,4 +1,4 @@
-# pages/geo.py
+# pages/Geographical_Explorer.py
 from utils import load_data, get_geojson
 from typing import Optional, List
 from google import genai
@@ -113,6 +113,13 @@ st.markdown("""
     }
     [data-testid="stTextInput"] label {
         display: none; /* Hide label as we have a placeholder */
+    }
+
+    /* Custom styling for the multiselect in Tab 2 */
+    [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+        background-color: #ffffff !important;
+        border: 2px solid #800000 !important; /* Maroon border */
+        border-radius: 8px;
     }
 
     /* Big GEOGRAPHICAL title (making it more subtle) */
@@ -287,108 +294,63 @@ def lighten_hex_color(hex_color, factor=0.5):
     return f'#{r:02x}{g:02x}{b:02x}'
 
 
-def build_country_selection_map(all_names_df, geojson_obj, selected_countries: Optional[List[str]]):
-    """Create an interactive mapbox choropleth for selecting countries."""
-    if all_names_df.empty:
-        return go.Figure()
-
-    aggregated = (
-        all_names_df.groupby("country", observed=True)["count"]
-        .sum().reset_index()
-    )
-    aggregated["geojson_name"] = aggregated["country"].apply(
-        map_country_to_geojson_name)
-
-    top_names = (
-        all_names_df.groupby(["country", "name"], observed=True)["count"]
-        .sum().reset_index()
-        .sort_values(["country", "count"], ascending=[True, False])
-    )
-
-    top_name_lookup = {
-        country: "<br>".join([
-            f"{row['name']}: {int(row['count']):,}"
-            for _, row in subset.head(5).iterrows()
-        ]) or "No data"
-        for country, subset in top_names.groupby("country", observed=True)
-    }
-
-    hover_text = [
-        "<b>{}</b><br>Total names counted: {:,}<br><br><b>Top names:</b><br>{}".format(
-            row["country"],
-            int(row["count"]),
-            top_name_lookup.get(row["country"], "No data available"),
-        )
-        for _, row in aggregated.iterrows()
+def build_static_country_map(geojson_obj: dict, selected_countries: List[str]):
+    """
+    Creates a non-interactive map to display selected countries.
+    It highlights selected countries and shows the rest in a neutral color.
+    """
+    # Get all country names from the GeoJSON to draw the base map
+    all_geojson_countries = [
+        feature['properties']['name'] for feature in geojson_obj['features']
+        if 'name' in feature.get('properties', {})
     ]
 
-    base_trace = go.Choroplethmapbox(
+    # Convert selected country names to the format used in GeoJSON
+    selected_geo_names = [map_country_to_geojson_name(
+        c) for c in selected_countries]
+
+    fig = go.Figure()
+
+    # Base layer: all countries in a neutral gray
+    fig.add_trace(go.Choroplethmapbox(
         geojson=geojson_obj,
-        locations=aggregated["geojson_name"],
-        z=aggregated["count"],
+        locations=all_geojson_countries,
+        z=[0] * len(all_geojson_countries),  # Dummy data for a single color
         featureidkey="properties.name",
-        colorscale="Blues",
-        colorbar=dict(title="Total Count"),
-        hovertemplate="%{customdata[0]}<extra></extra>",
-        customdata=[[text] for text in hover_text],
-        marker_opacity=0.7,
+        colorscale=[[0, '#EAEBF0'], [1, '#EAEBF0']],  # Neutral light gray
+        showscale=False,
+        hoverinfo='skip',  # No hover info for the base layer
+        marker_opacity=1,
         marker_line_width=0.5,
-    )
+    ))
 
-    fig_map = go.Figure(base_trace)
+    # Highlight layer: selected countries in the primary app color
+    if selected_geo_names:
+        fig.add_trace(go.Choroplethmapbox(
+            geojson=geojson_obj,
+            locations=selected_geo_names,
+            z=[1] * len(selected_geo_names),  # Dummy data for a single color
+            featureidkey="properties.name",
+            colorscale=[[0, '#4F8BF9'], [1, '#4F8BF9']],  # Primary blue
+            showscale=False,
+            hoverinfo='location',  # Show country name on hover
+            hovertemplate="<b>%{location}</b><extra></extra>",
+            marker_opacity=1,
+            marker_line_width=1,
+            marker_line_color='#262730',
+        ))
 
-    if selected_countries:
-        selected_geo_names = [map_country_to_geojson_name(
-            c) for c in selected_countries]
-        highlight_data = aggregated[aggregated["geojson_name"].isin(
-            selected_geo_names)]
-
-        if not highlight_data.empty:
-            fig_map.add_trace(
-                go.Choroplethmapbox(
-                    geojson=geojson_obj,
-                    locations=highlight_data["geojson_name"].tolist(),
-                    z=highlight_data["count"].tolist(),
-                    featureidkey="properties.name",
-                    colorscale=[[0, "rgba(255,107,107,0.85)"], [
-                        1, "rgba(255,107,107,0.85)"]],
-                    showscale=False,
-                    hoverinfo="skip",
-                    marker_opacity=1.0,
-                    marker_line_width=2,
-                    marker_line_color="#ff6b6b",
-                )
-            )
-
-    fig_map.update_layout(
+    fig.update_layout(
         mapbox_style="carto-positron",
-        mapbox_zoom=1,
+        mapbox_zoom=0.8,
         mapbox_center={"lat": 40, "lon": 10},
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         showlegend=False,
-        height=520,
-        paper_bgcolor='#F0F2F6',  # Match app background
-        plot_bgcolor='#F0F2F6',  # Match app background
+        height=450,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
     )
-    return fig_map
-
-
-def get_top_names_for_country(dataframe, country: str | None, limit: int = 5):
-    """Return aggregated top names for a given country."""
-    if not country:
-        return None
-
-    subset = dataframe[dataframe["country"] == country]
-    if subset.empty:
-        return None
-
-    aggregated = (
-        subset.groupby("name", observed=True)["count"].sum()
-        .sort_values(ascending=False)
-        .head(limit)
-        .reset_index()
-    )
-    return aggregated
+    return fig
 
 
 @st.cache_data(show_spinner=False)
@@ -426,14 +388,22 @@ with tab1:
     with left_col:
         st.markdown('<h2 class="geographical-title">Search Names</h2>',
                     unsafe_allow_html=True)
-        name_query = st.text_input(value='Aria',
-                                   label="SEARCH", placeholder="Search names (e.g., Maria, Alex)", label_visibility="collapsed")
+        # Use a form to prevent rerunning on every keystroke, which caused crashes.
+        with st.form(key="name_search_form"):
+            name_query = st.text_input(
+                value='Aria',
+                label="SEARCH",
+                placeholder="Search names (e.g., Maria, Alex)",
+                label_visibility="collapsed"
+            )
+            search_button = st.form_submit_button("Search")
 
         st.markdown(
             '<div class="info-box"><h3>HOW TO USE</h3>Search for one or more names (comma-separated) to see popularity hotspots on the map.</div>', unsafe_allow_html=True)
 
     search_data = None
-    if name_query:
+    # Only perform the search when the form is submitted
+    if search_button and name_query:
         name_queries = [name.strip().lower()
                         for name in name_query.split(",") if name.strip()]
         if name_queries:
@@ -456,6 +426,17 @@ with tab1:
             name_color_map = {name: colors[i % len(
                 colors)] for i, name in enumerate(unique_names_found)}
 
+            # --- MEMORY OPTIMIZATION START ---
+            all_plot_countries = dominant_name_df["geojson_name"].unique()
+            filtered_geojson = {
+                "type": "FeatureCollection",
+                "features": [
+                    feature for feature in geojson["features"]
+                    if feature.get("properties", {}).get("name") in all_plot_countries
+                ]
+            }
+            # --- MEMORY OPTIMIZATION END ---
+
             fig_map = go.Figure()
             num_names = len(unique_names_found)
             colorbar_len = max(
@@ -472,8 +453,9 @@ with tab1:
                     1.0, base_color_hex]]
                 y_pos = 0.95 - i * (colorbar_len + 0.05)
                 fig_map.add_trace(go.Choroplethmapbox(
-                    geojson=geojson, locations=dominant_countries_for_name[
-                        "geojson_name"], z=dominant_countries_for_name["count"],
+                    geojson=filtered_geojson,
+                    locations=dominant_countries_for_name["geojson_name"],
+                    z=dominant_countries_for_name["count"],
                     featureidkey="properties.name", colorscale=color_scale,
                     colorbar=dict(title=f"{name_capitalized}", x=1.02, xanchor="left",
                                   len=colorbar_len, y=y_pos, yanchor="top", tickfont=dict(color='black')),
@@ -483,23 +465,19 @@ with tab1:
             fig_map.update_layout(
                 mapbox_style="carto-positron", mapbox_zoom=1, mapbox_center={"lat": 40, "lon": 10},
                 margin={"r": 0, "t": 0, "l": 0, "b": 0}, showlegend=False, height=620,
-                paper_bgcolor='#F0F2F6',  # Match app background
-                plot_bgcolor='#F0F2F6'   # Match app background
+                paper_bgcolor='#F0F2F6',
+                plot_bgcolor='#F0F2F6'
             )
             st.plotly_chart(fig_map, use_container_width=True)
         else:
-            if name_query:
+            # Show a warning only if a search was attempted and failed
+            if search_button and name_query:
                 st.warning(
                     f"No data found for '{name_query}'. Please try another name.")
             st.markdown(
                 f"<div class='map-placeholder'>Search for a name to view the global distribution map.</div>", unsafe_allow_html=True)
 
     with right_col:
-        # This whole section has been adjusted for better vertical compactness.
-
-        # GENDER DISTRIBUTION PIE CHART
-        # The title is now integrated directly into the Plotly chart,
-        # removing the extra space from the st.markdown title element.
         if search_data is not None and not search_data.empty:
             gender_dist = search_data.groupby(
                 "gender")["count"].sum().reset_index()
@@ -507,27 +485,23 @@ with tab1:
                              title="Gender Distribution",
                              color_discrete_map={"F": "#FFB6C1", "M": "#87CEFA", "U": "#D3D3D3"})
             fig_pie.update_layout(
-                margin=dict(l=10, r=10, t=35, b=10),  # Reduced margins
+                margin=dict(l=10, r=10, t=35, b=10),
                 showlegend=False,
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 title_font_size=18,
-                title_x=0.05,  # Left-aligned to match other titles
+                title_x=0.05,
             )
             fig_pie.update_traces(
                 textposition="inside", textinfo="percent+label", textfont_color='black')
             st.plotly_chart(fig_pie, use_container_width=True,
                             config={'displayModeBar': False})
         else:
-            # Fallback for when no data is available
             st.markdown(
                 '<div class="card-title">Gender Distribution</div>', unsafe_allow_html=True)
             st.markdown(
                 "<div class='placeholder-text'>Search for a name to see gender data.</div>", unsafe_allow_html=True)
 
-        # TOP COUNTRIES TABLE
-        # The fixed height of the dataframe has been removed to allow it to
-        # dynamically size to its content, saving space.
         st.markdown(
             '<div class="card-title">Top Countries by Count</div>', unsafe_allow_html=True)
         if search_data is not None and not search_data.empty:
@@ -535,70 +509,29 @@ with tab1:
                 "country")["count"].sum().sort_values(ascending=False).reset_index()
             st.dataframe(total_counts_by_country.head(10),
                          use_container_width=True,
-                         hide_index=True)  # Removed fixed height
+                         hide_index=True)
         else:
             st.markdown(
                 "<div class='placeholder-text'>Search for a name to see country data.</div>", unsafe_allow_html=True)
 
 
 # =============================================================================
-# TAB 2: LOCAL NAMING TRENDS [REVISED & FIXED]
+# TAB 2: LOCAL NAMING TRENDS [SIMPLIFIED & STABLE]
 # =============================================================================
 with tab2:
     st.header("📈 Discover Local Naming Trends")
     st.markdown(
-        "Use the interactive map or the dropdown below to select one or more countries. Selecting multiple countries will show names that are common to all of them."
+        "Use the dropdown to select countries and see them highlighted on the map. The charts below will update to show trends for your selection."
     )
 
-    # Use a list for multiple country selection
-    if "local_trends_countries" not in st.session_state:
-        st.session_state["local_trends_countries"] = []
+    control_col, map_col = st.columns([1, 1.5])
 
-    available_countries = sorted(names_df["country"].unique())
-
-    map_col, info_col = st.columns([2, 1])
-    with map_col:
-        selection_map = build_country_selection_map(
-            names_df, geojson, st.session_state["local_trends_countries"]
-        )
-        map_events = plotly_events(
-            selection_map,
-            click_event=True,
-            select_event=False,
-            hover_event=False,
-            override_height=520,
-            key="local_trends_map",
-        )
-
-    if map_events:
-        event = map_events[0]
-        clicked_geo_name = event.get("location")
-        if not clicked_geo_name:
-            curve_idx = event.get("curveNumber", 0)
-            point_idx = event.get("pointIndex")
-            if point_idx is None:
-                point_idx = event.get("pointNumber")
-            if point_idx is not None and selection_map.data:
-                curve_idx = min(curve_idx, len(selection_map.data) - 1)
-                locations = selection_map.data[curve_idx].locations
-                if locations and point_idx < len(locations):
-                    clicked_geo_name = locations[point_idx]
-
-        if clicked_geo_name:
-            derived_country = map_geojson_name_to_country(clicked_geo_name)
-            if derived_country in available_countries:
-                current_selection = st.session_state["local_trends_countries"]
-                if derived_country in current_selection:
-                    current_selection.remove(derived_country)  # Toggle off
-                else:
-                    current_selection.append(derived_country)  # Toggle on
-                st.session_state["local_trends_countries"] = current_selection
-                st.rerun()
-
-    with info_col:
+    with control_col:
+        available_countries = sorted(names_df["country"].unique())
         selected_countries = st.multiselect(
             "Select countries to explore:",
             available_countries,
+            default=["Sweden", "Japan"],
             key="local_trends_countries",
         )
 
@@ -609,17 +542,18 @@ with tab2:
             if flags:
                 st.markdown(
                     f"<div class='large-flag-emoji'>{flags}</div>", unsafe_allow_html=True)
-            for country in selected_countries:
-                st.markdown(f"• {country}")
+
+    with map_col:
+        # Build and display the lightweight, non-interactive map
+        static_map_fig = build_static_country_map(geojson, selected_countries)
+        st.plotly_chart(static_map_fig, use_container_width=True,
+                        config={'displayModeBar': False})
 
     st.divider()
 
-    # Data Display Logic
-    selected_countries = st.session_state.get("local_trends_countries", [])
-
     if not selected_countries:
         st.info(
-            "Please select one or more countries from the map or dropdown to see local trends.")
+            "Please select one or more countries from the dropdown to see local trends.")
 
     elif len(selected_countries) == 1:
         selected_country = selected_countries[0]
@@ -653,14 +587,13 @@ with tab2:
             else:
                 st.info("No last name data available for this country.")
 
-    else:  # Multiple countries selected
+    else:  # This block handles multiple selected countries
         num_countries = len(selected_countries)
         st.markdown(
             f"### Cross-examining Names Across **{num_countries}** Countries")
         st.write(
             f"Showing names that exist in all selected countries: {', '.join(selected_countries)}")
 
-        # --- First Names Logic ---
         first_names_filtered = names_df[names_df['country'].isin(
             selected_countries)]
         name_counts_per_country = first_names_filtered.groupby('name')[
@@ -670,7 +603,6 @@ with tab2:
         common_first_names_df = first_names_filtered[first_names_filtered['name'].isin(
             common_first_names_list)]
 
-        # --- Last Names Logic ---
         last_names_filtered = last_names_df[last_names_df['country'].isin(
             selected_countries)]
         lastname_counts_per_country = last_names_filtered.groupby('lastname')[
