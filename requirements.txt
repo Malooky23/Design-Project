@@ -1,4 +1,1 @@
-plotly
-pandas
-openai
-google-genai
+pip install streamlit-plotly-events plotly pandas openai google-genai
