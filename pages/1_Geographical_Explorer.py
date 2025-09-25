@@ -376,7 +376,7 @@ def get_name_analysis(name: str):
 # TABS FOR DIFFERENT FUNCTIONALITIES
 # =============================================================================
 tab1, tab2, tab3, tab4 = st.tabs([
-    "Geographical Explorer", "Local Trends", "Cross-Cultural Names", "Name Meaning & AI Analysis"
+    "Geographical Explorer", "Local Trends", "Cross-Cultural Names", "Gender Analysis"
 ])
 
 # =============================================================================
@@ -651,49 +651,97 @@ with tab3:
     st.dataframe(widespread_names_df, use_container_width=True, hide_index=True,
                  column_config={"name": "Name", "country_count": st.column_config.ProgressColumn("Number of Countries", format="%d", min_value=0, max_value=int(widespread_names_df["country_count"].max()))})
 
-# =============================================================================
-# TAB 4: NAME MEANING & AI ANALYSIS
-# =============================================================================
 with tab4:
-    st.header("Name Meaning, Cultural Check & Fun Facts")
-    st.markdown("Explore names using Google Gemini AI.")
-    if "GEMINI_API" not in st.secrets:
-        st.error(
-            "Google API Key not found. Please add it to your Streamlit secrets to use this feature.")
+    st.header("Gender-Neutral Name Finder")
+    st.markdown(
+        "Discover names with a close to 50/50 gender split in our dataset. The list is sorted from most to least gender-neutral."
+    )
+
+    # Find names that appear for both Male and Female
+    # considering only 'M' and 'F' for percentage calculation
+    mf_names_df = names_df[names_df['gender'].isin(['M', 'F'])]
+    name_gender_counts = mf_names_df.groupby('name')['gender'].nunique()
+    neutral_name_list = name_gender_counts[name_gender_counts > 1].index
+
+    if not neutral_name_list.empty:
+        # Filter the df to only these names
+        neutral_df = mf_names_df[mf_names_df['name'].isin(
+            neutral_name_list)].copy()
+
+        # Pivot to get M and F counts per name
+        gender_pivot = neutral_df.pivot_table(
+            index='name',
+            columns='gender',
+            values='count',
+            aggfunc='sum',
+            fill_value=0
+        )
+
+        # Calculate totals, percentages, and neutrality score
+        gender_pivot['count'] = gender_pivot['M'] + gender_pivot['F']
+        gender_pivot['female %'] = (
+            gender_pivot['F'] / gender_pivot['count']) * 100
+        gender_pivot['male %'] = (
+            gender_pivot['M'] / gender_pivot['count']) * 100
+        # The score is the distance from a perfect 50/50 split
+        gender_pivot['neutrality_score'] = abs(gender_pivot['female %'] - 50)
+
+        # Sort by the score (ascending)
+        sorted_neutral_df = gender_pivot.sort_values(
+            'neutrality_score', ascending=True)
+
+        # Prepare final dataframe for display
+        display_df = sorted_neutral_df[[
+            'count', 'female %', 'male %'
+        ]].reset_index()
+
+        # Rename columns for clarity in the table
+        display_df.rename(columns={
+            'name': 'Name',
+            'count': 'Total Count',
+            'female %': 'Female %',
+            'male %': 'Male %'
+        }, inplace=True)
+
+        # Reorder columns for display
+        display_df = display_df[['Name', 'Total Count', 'Female %', 'Male %']]
+
+        num_names_to_show = st.slider(
+            "How many names to display?",
+            min_value=10,
+            max_value=len(display_df),
+            value=50,
+            step=10,
+            key="neutral_names_slider"
+        )
+
+        st.dataframe(
+            display_df.head(num_names_to_show),
+            column_config={
+                "Name": st.column_config.TextColumn("Name"),
+                "Total Count": st.column_config.NumberColumn(
+                    "Total Count",
+                    format="%d"
+                ),
+                "Female %": st.column_config.ProgressColumn(
+                    "Female %",
+                    help="The percentage of times this name was recorded as female.",
+                    format="%.1f%%",
+                    min_value=0,
+                    max_value=100,
+                ),
+                "Male %": st.column_config.ProgressColumn(
+                    "Male %",
+                    help="The percentage of times this name was recorded as male.",
+                    format="%.1f%%",
+                    min_value=0,
+                    max_value=100,
+                ),
+            },
+            use_container_width=True,
+            hide_index=True
+        )
+
     else:
-        name_tool_query = st.text_input(
-            "Enter a name to analyze with AI:", "Kai").strip()
-        if name_tool_query:
-            with st.spinner(f"Asking Gemini AI about '{name_tool_query}'..."):
-                analysis = get_name_analysis(name_tool_query)
-            if analysis:
-                st.subheader(f"AI Analysis of '{name_tool_query}'")
-                col1, col2 = st.columns(2)
-                with col1:
-                    if analysis.get("meaning"):
-                        st.success(f"**Meaning:** {analysis['meaning']}")
-                with col2:
-                    if analysis.get("origin"):
-                        st.info(f"**Origin:** {analysis['origin']}")
-                st.divider()
-                st.subheader("Culturally Similar Suggestions")
-                st.write(", ".join(analysis.get("similar_names", ["N/A"])))
-                st.divider()
-                st.subheader("Cross-Cultural Name Check")
-                cultural_issues = analysis.get("cultural_issues")
-                if cultural_issues:
-                    for issue in cultural_issues:
-                        st.warning(f"**Potential Issue:** {issue}")
-                else:
-                    st.success("No known negative connotations identified.")
-                st.divider()
-                st.subheader("Fun Facts")
-                fun_facts = analysis.get("fun_facts")
-                if fun_facts:
-                    for fact in fun_facts:
-                        st.write(f"- {fact}")
-                else:
-                    st.info("No fun facts generated.")
-            else:
-                st.error(
-                    f"Could not retrieve analysis for '{name_tool_query}'.")
+        st.write(
+            "No names with both Male and Female entries found in the dataset.")

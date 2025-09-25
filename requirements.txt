@@ -3,3 +3,4 @@ plotly
 pandas
 google-genai
 pycountry
+streamlit-plotly-events

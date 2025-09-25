@@ -152,7 +152,7 @@ with col1:
 """, unsafe_allow_html=True)
     if st.button("Go to Geographical Explorer", key="geo", use_container_width=True):
         # st.switch_page("pages/geo.py")
-        st.switch_page("pages/Geographical_Explorer.py")
+        st.switch_page("pages/1_Geographical_Explorer.py")
     st.markdown("""</div>""", unsafe_allow_html=True)
 
 
@@ -174,7 +174,7 @@ with col2:
     <div style='margin-top: calc(2.65rem); width:100%;'>
 """, unsafe_allow_html=True)
     if st.button("Go to Name Meaning", key="meaning", use_container_width=True):
-        st.switch_page("pages/Generators.py")
+        st.switch_page("pages/2_Generators.py")
     st.markdown("""
   </div>
 </div>

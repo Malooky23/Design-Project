@@ -164,12 +164,13 @@ def suggest_names(p1: str, p2: str, vibe: str, gender: str, limit: int) -> List[
 # TABS FOR DIFFERENT TOOLS
 # =============================================================================
 
-tab_ai, tab_name_creation, tab_nick, tab_unique, tab_neutral = st.tabs([
+tab_ai, tab_name_creation, tab_nick = st.tabs([
+# tab_ai, tab_name_creation, tab_nick, tab_unique, tab_neutral = st.tabs([
     "AI Name Analysis",
     "Name Creation Tools",  # Renamed and combined tab
     "Nickname Generator",
-    "Unique Letter Finder",
-    "Gender-Neutral Finder",
+    # "Unique Letter Finder",
+
 ])
 
 
@@ -281,17 +282,16 @@ with tab_nick:
         name_input = st.text_input("First name", "Alexander", key="nick_name")
         vibe_choice_nick = st.radio("Choose a nickname vibe", list(
             STYLE_FILTERS.keys()), horizontal=True)
-        count = st.slider("Number of nicknames", 3, 10, 5)
     if st.button("Find nicknames", use_container_width=True):
         nicknames = generate_nicknames(name_input, vibe_choice_nick)
         if nicknames:
             st.subheader("Nickname ideas")
-            st.write(" • ".join(f"**{n}**" for n in nicknames[:count]))
+            st.write(" • ".join(f"**{n}**" for n in nicknames[:3]))
         else:
             st.warning("Try another name – we couldn't find any nicknames.")
 
 # --- TAB 4: UNIQUE LETTER FINDER ---
-with tab_unique:
+# with tab_unique:
     st.header("Unique Letter Finder")
     st.markdown(
         "Find names that are phonetically diverse by counting their unique letters.")
@@ -310,7 +310,7 @@ with tab_unique:
     st.plotly_chart(fig_unique, use_container_width=True)
 
 # --- TAB 5: GENDER-NEUTRAL FINDER ---
-with tab_neutral:
+# with tab_neutral:
     st.header("Gender-Neutral Name Finder")
     st.markdown(
         "Discover names with a close to 50/50 gender split in our dataset. The list is sorted from most to least gender-neutral."
