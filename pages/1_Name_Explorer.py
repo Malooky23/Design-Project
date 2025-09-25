@@ -17,7 +17,7 @@ from streamlit_plotly_events import plotly_events
 # =============================================================================
 
 st.set_page_config(
-    page_title="Global Name Explorer",
+    page_title="Name Explorer",
     page_icon=None,
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -196,7 +196,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-st.title("Global Name Explorer")
+st.title("Name Explorer")
 st.markdown(
     "Your all-in-one toolkit for exploring names. Discover geographical hotspots, local trends, cross-cultural connections, and AI-powered name analysis."
 )

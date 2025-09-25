@@ -12,7 +12,7 @@ st.set_page_config(
 
 # st.sidebar.success("Select a feature from the list to begin.")
 
-st.title("Welcome to the Global Name Explorer!")
+st.title("Welcome to the No Name Explorer!")
 st.markdown(
     """
 <div style='margin-bottom:0.05rem;'>
@@ -139,7 +139,7 @@ with col1:
     st.markdown(
         """
         <div style='width:320px; margin: 0 auto; text-align: center; margin-top: 0.3rem; border-radius: 1rem; padding: 0.5rem 1rem; box-sizing: border-box;'>
-            <a href="http://localhost:8501/Geographical_Explorer" target="_self" style="display:block;">
+            <a href="http://localhost:8501/Name_Explorer" target="_self" style="display:block;">
                 <img src='https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80' style='width: 110%; max-width: 110%; display: block; border-radius: 0.2rem; margin-bottom: 0.01rem; margin-left: -5%;' alt='Geographical Explorer image'>
             </a>
     """,
@@ -152,7 +152,7 @@ with col1:
 """, unsafe_allow_html=True)
     if st.button("Go to Geographical Explorer", key="geo", use_container_width=True):
         # st.switch_page("pages/geo.py")
-        st.switch_page("pages/1_Geographical_Explorer.py")
+        st.switch_page("pages/1_Name_Explorer.py")
     st.markdown("""</div>""", unsafe_allow_html=True)
 
 
@@ -160,13 +160,13 @@ with col2:
     st.markdown(
         """
         <div style='width:320px; margin: 0 auto; text-align: center; margin-top: 0.3rem; border-radius: 1rem; padding: 0.5rem 1rem; box-sizing: border-box;'>
-            <a href="http://localhost:8501/Generators" target="_self" style="display:block;">
+            <a href="http://localhost:8501/Name_Generators" target="_self" style="display:block;">
                 <img src='https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80' style='width: 110%; max-width: 110%; display: block; border-radius: 0.2rem; margin-bottom: 0.01rem; margin-left: -5%;' alt='Generator image'>
             </a>
         """,
         unsafe_allow_html=True,
     )
-    st.subheader("Name Generator")
+    st.subheader("Name Generators")
     st.write("This name generator dashboard helps you explore and discover names with ease. Search for any name to access similar alternatives, meanings, origins, nicknames, and unique facts.")
     # Use a wrapper div with a larger margin-top to align the right button with the left button, without affecting other elements
     st.markdown("""
@@ -174,7 +174,7 @@ with col2:
     <div style='margin-top: calc(2.65rem); width:100%;'>
 """, unsafe_allow_html=True)
     if st.button("Go to Name Meaning", key="meaning", use_container_width=True):
-        st.switch_page("pages/2_Generators.py")
+        st.switch_page("pages/2_Name_Generators.py")
     st.markdown("""
   </div>
 </div>
