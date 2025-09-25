@@ -1,15 +1,12 @@
 # pages/Generators.py
 # 2_Creative_Name_Tools.py
 import streamlit as st
-import json
 import os
 import pandas as pd
 import plotly.express as px
 import difflib
 from typing import Dict, List, TypedDict
 
-# Import the Google Gen AI SDK
-from google import genai
 # Assuming utils.py with load_data is in the project root
 from utils import load_data
 
@@ -41,47 +38,6 @@ names_df = load_name_data()
 # =============================================================================
 # HELPER FUNCTIONS & CONSTANTS (from all merged files)
 # =============================================================================
-
-# --- From 4_name_meaning.py (AI Analysis) ---
-@st.cache_data(show_spinner=False)
-def get_name_analysis(name: str):
-    """Calls the Gemini API to get a full analysis of a name."""
-    api_key = st.secrets.get("GEMINI_API")
-    if not api_key:
-        st.error("GEMINI_API not found in Streamlit secrets.")
-        return None
-    try:
-        client = genai.Client(api_key=api_key)
-        prompt = f"""
-        Analyze the name "{name}". Provide the following information in a single, valid JSON object.
-        Your response must be ONLY the JSON object.
-        The JSON object must have these exact keys:
-        - "meaning": A concise definition of the name's meaning.
-        - "origin": The primary cultural and/or linguistic origin(s).
-        - "similar_names": An array of 4-6 names with a similar cultural origin or vibe.
-        - "cultural_issues": An array of strings describing potential cross-cultural issues. If none, provide an empty array [].
-        - "fun_facts": An array of 3-4 interesting trivia points or famous people. If none, provide an empty array [].
-
-        Example for "Lucy":
-        {{
-            "meaning": "Light.",
-            "origin": "Latin",
-            "similar_names": ["Clara", "Stella", "Nora", "Ruby", "Hazel"],
-            "cultural_issues": [],
-            "fun_facts": ["Famous Lucy: Lucy from the Peanuts comic strip.", "Saint Lucy is the patron saint of the blind."]
-        }}
-        Now, provide the analysis for the name "{name}":
-        """
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite", contents=prompt)
-        if not response.text:
-            return None
-        clean_response = response.text.strip().replace("```json", "").replace("```", "")
-        return json.loads(clean_response)
-    except Exception as e:
-        st.error(f"An error occurred connecting to the Gemini API: {e}")
-        return None
-
 
 # --- From 8_nickname_generator.py ---
 NICKNAME_DATABASE = {"alexander": ["Alex", "Xander", "Lex"], "elizabeth": ["Liz", "Lizzy", "Beth", "Eliza"], "michael": ["Mike", "Mikey", "Mick"], "gabriella": ["Gabby", "Ella"], "christopher": ["Chris", "Topher"], "katherine": [
@@ -164,83 +120,16 @@ def suggest_names(p1: str, p2: str, vibe: str, gender: str, limit: int) -> List[
 # TABS FOR DIFFERENT TOOLS
 # =============================================================================
 
-tab_ai, tab_name_creation, tab_nick = st.tabs([
-# tab_ai, tab_name_creation, tab_nick, tab_unique, tab_neutral = st.tabs([
-    "AI Name Analysis",
-    "Name Creation Tools",  # Renamed and combined tab
+tab_name_creation, tab_nick = st.tabs([
+    "Name Creation Tools",
     "Nickname Generator",
-    # "Unique Letter Finder",
-
 ])
 
 
-# --- TAB 1: AI NAME ANALYSIS ---
-with tab_ai:
-    st.header("Name Meaning, Cultural Check & Fun Facts")
-    st.markdown(
-        "Explore the meaning, cultural context, and fun facts about names using Google Gemini AI.")
-    if "GEMINI_API" not in st.secrets:
-        st.error("Google API Key not found. Please add it to your Streamlit secrets (`.streamlit/secrets.toml`) to use this feature.")
-    else:
-        ai_name_query = st.text_input(
-            "Enter a name to analyze with AI:", "Maria").strip()
-        if ai_name_query:
-            with st.spinner(f"Asking Gemini AI about '{ai_name_query}'..."):
-                analysis = get_name_analysis(ai_name_query)
-            if analysis:
-                st.subheader(f"Analysis of '{ai_name_query}'")
-                col1, col2 = st.columns(2)
-                with col1:
-                    if analysis.get("meaning"):
-                        st.success(f"**Meaning:** {analysis['meaning']}")
-                with col2:
-                    if analysis.get("origin"):
-                        st.info(f"**Origin:** {analysis['origin']}")
-                st.divider()
-                st.subheader("Culturally Similar Suggestions")
-                if analysis.get("similar_names"):
-                    st.write(", ".join(analysis["similar_names"]))
-                st.divider()
-                st.subheader("Cross-Cultural Name Check")
-                if analysis.get("cultural_issues"):
-                    for issue in analysis["cultural_issues"]:
-                        st.warning(f"**Potential Issue:** {issue}")
-                else:
-                    st.success(
-                        "No known negative connotations identified by the AI.")
-                st.divider()
-                st.subheader("Fun Facts")
-                if analysis.get("fun_facts"):
-                    for fact in analysis["fun_facts"]:
-                        st.write(f"- {fact}")
-                else:
-                    st.info("No fun facts were generated for this name.")
-            else:
-                st.error(f"Could not retrieve analysis for '{ai_name_query}'.")
-
-# --- TAB 2: NAME CREATION TOOLS (MERGED) ---
+# --- TAB 1: NAME CREATION TOOLS (MERGED) ---
 with tab_name_creation:
     st.header("Name Creation Tools")
     st.markdown("Combine names or blend parent names to inspire new ideas.")
-
-    # # Name Merger Section
-    # st.subheader("Creative Name Merger")
-    # st.markdown("Combine two names to create a unique new one.")
-    # col1, col2 = st.columns(2)
-    # with col1:
-    #     name1 = st.text_input("First Name", "Maria", key="merger_name1")
-    # with col2:
-    #     name2 = st.text_input("Second Name", "Lynn", key="merger_name2")
-    # if st.button("Merge Names", key="merge_button"):
-    #     if name1 and name2:
-    #         mid1, mid2 = len(name1) // 2, len(name2) // 2
-    #         merged1 = (name1[:mid1] + name2[mid2:]).capitalize()
-    #         merged2 = (name1 + name2).capitalize()
-    #         st.success(f"Merged suggestions: **{merged1}**, **{merged2}**")
-    #     else:
-    #         st.warning("Please enter two names to merge.")
-
-    # st.divider()  # Separator between merger and blender
 
     # Parent Name Blender Section
     st.subheader("Parent Name Blender")
@@ -273,7 +162,7 @@ with tab_name_creation:
             st.warning(
                 "Could not find any suggestions. Try different names or vibes.")
 
-# --- TAB 3: NICKNAME GENERATOR ---
+# --- TAB 2: NICKNAME GENERATOR ---
 with tab_nick:
     st.header("Nickname Generator")
     st.markdown(
@@ -289,4 +178,3 @@ with tab_nick:
             st.write(" • ".join(f"**{n}**" for n in nicknames[:3]))
         else:
             st.warning("Try another name – we couldn't find any nicknames.")
-
