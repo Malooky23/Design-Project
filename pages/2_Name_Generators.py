@@ -16,7 +16,7 @@ from utils import load_data
 # =============================================================================
 st.set_page_config(
     page_title="Creative Name Tools",
-    page_icon="🎨",
+    page_icon="image.png",
     layout="wide"
 )
 

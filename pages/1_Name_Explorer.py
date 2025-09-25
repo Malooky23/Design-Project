@@ -786,7 +786,7 @@ from streamlit_plotly_events import plotly_events
 
 st.set_page_config(
     page_title="Name Explorer",
-    page_icon=None,
+    page_icon="image.png",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
