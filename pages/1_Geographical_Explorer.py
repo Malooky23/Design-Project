@@ -376,7 +376,7 @@ def get_name_analysis(name: str):
 # TABS FOR DIFFERENT FUNCTIONALITIES
 # =============================================================================
 tab1, tab2, tab3, tab4 = st.tabs([
-    "Geographical Explorer", "Local Trends", "Cross-Cultural Names", "Gender Analysis"
+    "Geographical Explorer", "Local Trends", "Cross-Cultural Names", "Gender Neutral Names"
 ])
 
 # =============================================================================
@@ -642,29 +642,40 @@ with tab2:
 # =============================================================================
 with tab3:
     st.header("Names Spanning Multiple Cultures")
-    st.markdown("Discover names that are common in many distinct regions.")
+    st.markdown(
+        "Discover names that are common in many distinct regions. Use the search bar below to filter the list.")
+
     widespread_names = names_df.groupby(
         "name")["country"].nunique().sort_values(ascending=False)
     widespread_names_df = widespread_names.reset_index().rename(
         columns={"country": "country_count"})
-    st.write("Top geographically widespread names:")
-    st.dataframe(widespread_names_df, use_container_width=True, hide_index=True,
+
+    name_search_query = st.text_input(
+        "Search for a name in the list:", "", placeholder="e.g. Maria")
+
+    if name_search_query:
+        display_df = widespread_names_df[widespread_names_df['name'].str.contains(
+            name_search_query, case=False, na=False)]
+    else:
+        display_df = widespread_names_df
+
+    st.write("Geographically widespread names:")
+    st.dataframe(display_df, use_container_width=True, hide_index=True,
                  column_config={"name": "Name", "country_count": st.column_config.ProgressColumn("Number of Countries", format="%d", min_value=0, max_value=int(widespread_names_df["country_count"].max()))})
+
 
 with tab4:
     st.header("Gender-Neutral Name Finder")
     st.markdown(
-        "Discover names with a close to 50/50 gender split in our dataset. The list is sorted from most to least gender-neutral."
+        "Discover names with a close to 50/50 gender split in our dataset. Sort by gender-neutrality to find the most balanced names."
     )
 
     # Find names that appear for both Male and Female
-    # considering only 'M' and 'F' for percentage calculation
     mf_names_df = names_df[names_df['gender'].isin(['M', 'F'])]
     name_gender_counts = mf_names_df.groupby('name')['gender'].nunique()
     neutral_name_list = name_gender_counts[name_gender_counts > 1].index
 
     if not neutral_name_list.empty:
-        # Filter the df to only these names
         neutral_df = mf_names_df[mf_names_df['name'].isin(
             neutral_name_list)].copy()
 
@@ -683,46 +694,47 @@ with tab4:
             gender_pivot['F'] / gender_pivot['count']) * 100
         gender_pivot['male %'] = (
             gender_pivot['M'] / gender_pivot['count']) * 100
-        # The score is the distance from a perfect 50/50 split
+        # Neutrality: sum of both percentages (double the percentage of the minority group)
+        gender_pivot['neutrality %'] = 2 * \
+            gender_pivot[['female %', 'male %']].min(axis=1)
+        # Score: distance from perfect 50/50 split
         gender_pivot['neutrality_score'] = abs(gender_pivot['female %'] - 50)
 
-        # Sort by the score (ascending)
-        sorted_neutral_df = gender_pivot.sort_values(
-            'neutrality_score', ascending=True)
-
         # Prepare final dataframe for display
-        display_df = sorted_neutral_df[[
-            'count', 'female %', 'male %'
-        ]].reset_index()
+        display_df = gender_pivot.reset_index()[[
+            'name', 'count', 'female %', 'male %', 'neutrality %'
+        ]]
 
-        # Rename columns for clarity in the table
         display_df.rename(columns={
             'name': 'Name',
             'count': 'Total Count',
             'female %': 'Female %',
-            'male %': 'Male %'
+            'male %': 'Male %',
+            'neutrality %': 'Neutrality %',
         }, inplace=True)
 
-        # Reorder columns for display
-        display_df = display_df[['Name', 'Total Count', 'Female %', 'Male %']]
+        display_df = display_df[[
+            'Name', 'Total Count', 'Female %', 'Male %', 'Neutrality %']]
+
+        # Show top 10 most neutral names by default
+        default_display_df = display_df.sort_values(
+            'Neutrality %', ascending=False).head(10)
 
         num_names_to_show = st.slider(
             "How many names to display?",
             min_value=10,
             max_value=len(display_df),
-            value=50,
+            value=10,
             step=10,
             key="neutral_names_slider"
         )
 
         st.dataframe(
-            display_df.head(num_names_to_show),
+            display_df.sort_values(
+                'Neutrality %', ascending=False).head(num_names_to_show),
             column_config={
                 "Name": st.column_config.TextColumn("Name"),
-                "Total Count": st.column_config.NumberColumn(
-                    "Total Count",
-                    format="%d"
-                ),
+                "Total Count": st.column_config.NumberColumn("Total Count", format="%d"),
                 "Female %": st.column_config.ProgressColumn(
                     "Female %",
                     help="The percentage of times this name was recorded as female.",
@@ -737,11 +749,18 @@ with tab4:
                     min_value=0,
                     max_value=100,
                 ),
+                "Neutrality %": st.column_config.ProgressColumn(
+                    "Neutrality %",
+                    help="Double the percentage of the less common gender for this name.",
+                    format="%.1f%%",
+                    min_value=0,
+                    max_value=100,
+                ),
+                
             },
             use_container_width=True,
             hide_index=True
         )
 
     else:
-        st.write(
-            "No names with both Male and Female entries found in the dataset.")
+        st.write("No names with both Male and Female entries found in the dataset.")

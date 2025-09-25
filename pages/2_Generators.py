@@ -223,24 +223,24 @@ with tab_name_creation:
     st.header("Name Creation Tools")
     st.markdown("Combine names or blend parent names to inspire new ideas.")
 
-    # Name Merger Section
-    st.subheader("Creative Name Merger")
-    st.markdown("Combine two names to create a unique new one.")
-    col1, col2 = st.columns(2)
-    with col1:
-        name1 = st.text_input("First Name", "Maria", key="merger_name1")
-    with col2:
-        name2 = st.text_input("Second Name", "Lynn", key="merger_name2")
-    if st.button("Merge Names", key="merge_button"):
-        if name1 and name2:
-            mid1, mid2 = len(name1) // 2, len(name2) // 2
-            merged1 = (name1[:mid1] + name2[mid2:]).capitalize()
-            merged2 = (name1 + name2).capitalize()
-            st.success(f"Merged suggestions: **{merged1}**, **{merged2}**")
-        else:
-            st.warning("Please enter two names to merge.")
+    # # Name Merger Section
+    # st.subheader("Creative Name Merger")
+    # st.markdown("Combine two names to create a unique new one.")
+    # col1, col2 = st.columns(2)
+    # with col1:
+    #     name1 = st.text_input("First Name", "Maria", key="merger_name1")
+    # with col2:
+    #     name2 = st.text_input("Second Name", "Lynn", key="merger_name2")
+    # if st.button("Merge Names", key="merge_button"):
+    #     if name1 and name2:
+    #         mid1, mid2 = len(name1) // 2, len(name2) // 2
+    #         merged1 = (name1[:mid1] + name2[mid2:]).capitalize()
+    #         merged2 = (name1 + name2).capitalize()
+    #         st.success(f"Merged suggestions: **{merged1}**, **{merged2}**")
+    #     else:
+    #         st.warning("Please enter two names to merge.")
 
-    st.divider()  # Separator between merger and blender
+    # st.divider()  # Separator between merger and blender
 
     # Parent Name Blender Section
     st.subheader("Parent Name Blender")
@@ -289,119 +289,4 @@ with tab_nick:
             st.write(" • ".join(f"**{n}**" for n in nicknames[:3]))
         else:
             st.warning("Try another name – we couldn't find any nicknames.")
-
-# --- TAB 4: UNIQUE LETTER FINDER ---
-# with tab_unique:
-    st.header("Unique Letter Finder")
-    st.markdown(
-        "Find names that are phonetically diverse by counting their unique letters.")
-    unique_names = names_df["name"].unique()
-    unique_letter_counts = {name: len(set(name.lower()))
-                            for name in unique_names}
-    sorted_names = sorted(unique_letter_counts.items(),
-                          key=lambda item: item[1], reverse=True)
-    unique_df = pd.DataFrame(sorted_names, columns=[
-                             "Name", "Unique Letter Count"]).head(10)
-    fig_unique = px.bar(
-        unique_df, x="Name", y="Unique Letter Count", title="Top 10 Names by Unique Letter Count",
-        color="Unique Letter Count", color_continuous_scale=px.colors.sequential.Viridis,
-    )
-    fig_unique.update_layout(xaxis={"categoryorder": "total descending"})
-    st.plotly_chart(fig_unique, use_container_width=True)
-
-# --- TAB 5: GENDER-NEUTRAL FINDER ---
-# with tab_neutral:
-    st.header("Gender-Neutral Name Finder")
-    st.markdown(
-        "Discover names with a close to 50/50 gender split in our dataset. The list is sorted from most to least gender-neutral."
-    )
-
-    # Find names that appear for both Male and Female
-    # considering only 'M' and 'F' for percentage calculation
-    mf_names_df = names_df[names_df['gender'].isin(['M', 'F'])]
-    name_gender_counts = mf_names_df.groupby('name')['gender'].nunique()
-    neutral_name_list = name_gender_counts[name_gender_counts > 1].index
-
-    if not neutral_name_list.empty:
-        # Filter the df to only these names
-        neutral_df = mf_names_df[mf_names_df['name'].isin(
-            neutral_name_list)].copy()
-
-        # Pivot to get M and F counts per name
-        gender_pivot = neutral_df.pivot_table(
-            index='name',
-            columns='gender',
-            values='count',
-            aggfunc='sum',
-            fill_value=0
-        )
-
-        # Calculate totals, percentages, and neutrality score
-        gender_pivot['count'] = gender_pivot['M'] + gender_pivot['F']
-        gender_pivot['female %'] = (
-            gender_pivot['F'] / gender_pivot['count']) * 100
-        gender_pivot['male %'] = (
-            gender_pivot['M'] / gender_pivot['count']) * 100
-        # The score is the distance from a perfect 50/50 split
-        gender_pivot['neutrality_score'] = abs(gender_pivot['female %'] - 50)
-
-        # Sort by the score (ascending)
-        sorted_neutral_df = gender_pivot.sort_values(
-            'neutrality_score', ascending=True)
-
-        # Prepare final dataframe for display
-        display_df = sorted_neutral_df[[
-            'count', 'female %', 'male %'
-        ]].reset_index()
-
-        # Rename columns for clarity in the table
-        display_df.rename(columns={
-            'name': 'Name',
-            'count': 'Total Count',
-            'female %': 'Female %',
-            'male %': 'Male %'
-        }, inplace=True)
-
-        # Reorder columns for display
-        display_df = display_df[['Name', 'Total Count', 'Female %', 'Male %']]
-
-        num_names_to_show = st.slider(
-            "How many names to display?",
-            min_value=10,
-            max_value=len(display_df),
-            value=50,
-            step=10,
-            key="neutral_names_slider"
-        )
-
-        st.dataframe(
-            display_df.head(num_names_to_show),
-            column_config={
-                "Name": st.column_config.TextColumn("Name"),
-                "Total Count": st.column_config.NumberColumn(
-                    "Total Count",
-                    format="%d"
-                ),
-                "Female %": st.column_config.ProgressColumn(
-                    "Female %",
-                    help="The percentage of times this name was recorded as female.",
-                    format="%.1f%%",
-                    min_value=0,
-                    max_value=100,
-                ),
-                "Male %": st.column_config.ProgressColumn(
-                    "Male %",
-                    help="The percentage of times this name was recorded as male.",
-                    format="%.1f%%",
-                    min_value=0,
-                    max_value=100,
-                ),
-            },
-            use_container_width=True,
-            hide_index=True
-        )
-
-    else:
-        st.write(
-            "No names with both Male and Female entries found in the dataset.")
 

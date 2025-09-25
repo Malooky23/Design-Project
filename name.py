@@ -5,9 +5,9 @@ from sidebar import create_sidebar
 
 st.set_page_config(
     page_title="Global Name Explorer - Home",
-    page_icon="🌍",
+    page_icon="image.png",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded"
 )
 
 # st.sidebar.success("Select a feature from the list to begin.")
@@ -139,7 +139,7 @@ with col1:
     st.markdown(
         """
         <div style='width:320px; margin: 0 auto; text-align: center; margin-top: 0.3rem; border-radius: 1rem; padding: 0.5rem 1rem; box-sizing: border-box;'>
-            <a href="http://localhost:8501/geo" target="_self" style="display:block;">
+            <a href="http://localhost:8501/Geographical_Explorer" target="_self" style="display:block;">
                 <img src='https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80' style='width: 110%; max-width: 110%; display: block; border-radius: 0.2rem; margin-bottom: 0.01rem; margin-left: -5%;' alt='Geographical Explorer image'>
             </a>
     """,
@@ -160,7 +160,7 @@ with col2:
     st.markdown(
         """
         <div style='width:320px; margin: 0 auto; text-align: center; margin-top: 0.3rem; border-radius: 1rem; padding: 0.5rem 1rem; box-sizing: border-box;'>
-            <a href="http://localhost:8501/generators" target="_self" style="display:block;">
+            <a href="http://localhost:8501/Generators" target="_self" style="display:block;">
                 <img src='https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80' style='width: 110%; max-width: 110%; display: block; border-radius: 0.2rem; margin-bottom: 0.01rem; margin-left: -5%;' alt='Generator image'>
             </a>
         """,
