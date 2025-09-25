@@ -18,7 +18,7 @@ from streamlit_plotly_events import plotly_events
 
 st.set_page_config(
     page_title="Global Name Explorer",
-    page_icon="✨",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -196,7 +196,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-st.title("✨ Global Name Explorer")
+st.title("Global Name Explorer")
 st.markdown(
     "Your all-in-one toolkit for exploring names. Discover geographical hotspots, local trends, cross-cultural connections, and AI-powered name analysis."
 )
@@ -376,7 +376,7 @@ def get_name_analysis(name: str):
 # TABS FOR DIFFERENT FUNCTIONALITIES
 # =============================================================================
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🌍 Geographical Explorer", "📈 Local Trends", "🌐 Cross-Cultural Names", "📖 Name Meaning & AI Analysis"
+    "Geographical Explorer", "Local Trends", "Cross-Cultural Names", "Name Meaning & AI Analysis"
 ])
 
 # =============================================================================
@@ -519,7 +519,7 @@ with tab1:
 # TAB 2: LOCAL NAMING TRENDS [SIMPLIFIED & STABLE]
 # =============================================================================
 with tab2:
-    st.header("📈 Discover Local Naming Trends")
+    st.header("Discover Local Naming Trends")
     st.markdown(
         "Use the dropdown to select countries and see them highlighted on the map. The charts below will update to show trends for your selection."
     )
@@ -534,14 +534,6 @@ with tab2:
             default=["Sweden", "Japan"],
             key="local_trends_countries",
         )
-
-        if selected_countries:
-            st.write("#### Selected Countries:")
-            flags = " ".join(
-                [f for f in [country_to_flag(c) for c in selected_countries] if f])
-            if flags:
-                st.markdown(
-                    f"<div class='large-flag-emoji'>{flags}</div>", unsafe_allow_html=True)
 
     with map_col:
         # Build and display the lightweight, non-interactive map
@@ -649,7 +641,7 @@ with tab2:
 # TAB 3: CROSS-CULTURAL NAMES
 # =============================================================================
 with tab3:
-    st.header("🌐 Names Spanning Multiple Cultures")
+    st.header("Names Spanning Multiple Cultures")
     st.markdown("Discover names that are common in many distinct regions.")
     widespread_names = names_df.groupby(
         "name")["country"].nunique().sort_values(ascending=False)
@@ -663,7 +655,7 @@ with tab3:
 # TAB 4: NAME MEANING & AI ANALYSIS
 # =============================================================================
 with tab4:
-    st.header("📖 Name Meaning, Cultural Check & Fun Facts")
+    st.header("Name Meaning, Cultural Check & Fun Facts")
     st.markdown("Explore names using Google Gemini AI.")
     if "GEMINI_API" not in st.secrets:
         st.error(
@@ -695,7 +687,7 @@ with tab4:
                 else:
                     st.success("No known negative connotations identified.")
                 st.divider()
-                st.subheader("🎉 Fun Facts")
+                st.subheader("Fun Facts")
                 fun_facts = analysis.get("fun_facts")
                 if fun_facts:
                     for fact in fun_facts:
